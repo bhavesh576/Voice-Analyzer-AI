@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SpeechMaster - Voice Coach</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a3d, #2a2a5a);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .container {
+            width: 90%;
+            max-width: 750px;
+            background: rgba(30, 30, 60, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            color: #40c4ff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(64, 196, 255, 0.5);
+        }
+
+        /* Panels */
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+        }
+        .panel-header {
+            font-size: 1.1rem;
+            color: #40c4ff;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Visuals */
+        #waveCanvas, #pitchCanvas {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .stat-item span { color: #40c4ff; font-weight: 600; }
+
+        /* Controls */
+        .controls-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        button, select, input[type="checkbox"] + label {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: linear-gradient(90deg, #40c4ff, #0288d1);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(64, 196, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+        button:hover, select:hover, input[type="checkbox"]:checked + label {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(64, 196, 255, 0.5);
+        }
+        select {
+            background: #0288d1;
+            color: #ffffff;
+            appearance: none;
+            padding-right: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        select option { background: #1a1a3d; color: #ffffff; }
+        #stopListening { background: linear-gradient(90deg, #ff5252, #d32f2f); display: none; }
+        #record { background: linear-gradient(90deg, #ff7043, #f4511e); }
+        #exportPdfBtn, #exportViewBtn, #shareBtn { background: linear-gradient(90deg, #0288d1, #0277bd); }
+        #challengeBtn { background: linear-gradient(90deg, #ab47bc, #7b1fa2); }
+
+        /* Feedback */
+        #feedback {
+            font-size: 1rem;
+            color: #ffeb3b;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 235, 59, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        #progressBar {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #progressFill { height: 100%; width: 0; background: #40c4ff; transition: width 0.5s ease; }
+
+        /* Textareas */
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            resize: none;
+            margin-top: 10px;
+        }
+
+        /* History */
+        #historyChart { width: 100%; height: 180px; }
+
+        /* Modal for Report */
+        #reportModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1a1a3d;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        .modal-content h2 {
+            color: #40c4ff;
+            margin-bottom: 15px;
+        }
+        .modal-content pre {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+        }
+        .modal-content button {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        /* Specs */
+        .specs-list { font-size: 0.9rem; line-height: 1.5; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            h1 { font-size: 1.6rem; }
+            .panel { padding: 10px; }
+            button, select { padding: 8px 14px; font-size: 0.8rem; }
+            textarea { height: 60px; }
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>SpeechMaster</h1>
+
+        <!-- Visuals -->
+        <div class="panel">
+            <div class="panel-header">Voice Visuals</div>
+            <canvas id="waveCanvas"></canvas>
+            <canvas id="pitchCanvas"></canvas>
+        </div>
+
+        <!-- Stats -->
+        <div class="panel">
+            <div class="panel-header">Performance Stats</div>
+            <div class="stats-grid">
+                <div class="stat-item">Volume: <span id="volume">0 dB</span></div>
+                <div class="stat-item">Pace: <span id="pace">0 WPM</span></div>
+                <div class="stat-item">Confidence: <span id="confidence">0%</span></div>
+                <div class="stat-item">Fillers: <span id="fillers">0</span></div>
+                <div class="stat-item">Pitch: <span id="pitch">0 Hz</span></div>
+                <div class="stat-item">Noise: <span id="noise">0%</span></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="panel">
+            <div class="panel-header">Controls</div>
+            <div class="controls-grid">
+                <button id="startListening">Start</button>
+                <button id="stopListening">Stop</button>
+                <button id="record">Record</button>
+                <button id="exportPdfBtn">Export PDF</button>
+                <button id="exportViewBtn">View Report</button>
+                <button id="shareBtn">Share</button>
+                <button id="challengeBtn">Challenge</button>
+                <select id="waveStyle">
+                    <option value="circular">Circular Wave</option>
+                    <option value="line">Line Wave</option>
+                    <option value="bars">Bar Wave</option>
+                </select>
+                <select id="language">
+                    <option value="en-US">English</option>
+                    <option value="es-ES">Spanish</option>
+                </select>
+                <select id="scenario">
+                    <option value="general">General</option>
+                    <option value="interview">Interview</option>
+                </select>
+                <select id="profession">
+                    <option value="general">General</option>
+                    <option value="teacher">Teacher</option>
+                </select>
+                <input type="checkbox" id="noiseCancel" hidden><label for="noiseCancel">Noise Cancel</label>
+                <input type="checkbox" id="voiceEnhance" hidden><label for="voiceEnhance">Enhance Voice</label>
+            </div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="panel">
+            <div class="panel-header">Feedback & Transcription</div>
+            <div id="feedback">Start speaking to see feedback!</div>
+            <div id="progressBar"><div id="progressFill"></div></div>
+            <textarea id="transcription" readonly placeholder="Transcription..."></textarea>
+            <textarea id="translation" readonly placeholder="Translation..."></textarea>
+        </div>
+
+        <!-- History -->
+        <div class="panel">
+            <div class="panel-header">Session History</div>
+            <canvas id="historyChart"></canvas>
+        </div>
+
+        <!-- Specifications -->
+        <div class="panel">
+            <div class="panel-header">Specifications</div>
+            <ul class="specs-list">
+                <li>Real-time speech-to-text with multi-language support (English, Spanish)</li>
+                <li>Voice analysis: Volume, Pace, Confidence, Pitch, Fillers, Noise</li>
+                <li>Waveform visualization: Circular, Line, Bars</li>
+                <li>Export options: PDF download or in-app view</li>
+                <li>System requirements: Modern browser with microphone access (Chrome recommended)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal">
+        <div class="modal-content">
+            <h2>Speech Report</h2>
+            <pre id="reportContent"></pre>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        const waveCanvas = document.getElementById('waveCanvas');
+        const waveCtx = waveCanvas.getContext('2d');
+        const pitchCanvas = document.getElementById('pitchCanvas');
+        const pitchCtx = pitchCanvas.getContext('2d');
+
+        // Dynamic canvas sizing
+        function resizeCanvases() {
+            waveCanvas.width = waveCanvas.clientWidth;
+            waveCanvas.height = waveCanvas.clientHeight;
+            pitchCanvas.width = pitchCanvas.clientWidth;
+            pitchCanvas.height = pitchCanvas.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+
+        const volume = document.getElementById('volume');
+        const pace = document.getElementById('pace');
+        const confidence = document.getElementById('confidence');
+        const fillers = document.getElementById('fillers');
+        const pitch = document.getElementById('pitch');
+        const noise = document.getElementById('noise');
+        const feedback = document.getElementById('feedback');
+        const progressFill = document.getElementById('progressFill');
+        const transcription = document.getElementById('transcription');
+        const translation = document.getElementById('translation');
+        const startBtn = document.getElementById('startListening');
+        const stopBtn = document.getElementById('stopListening');
+        const recordBtn = document.getElementById('record');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const exportViewBtn = document.getElementById('exportViewBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const challengeBtn = document.getElementById('challengeBtn');
+        const waveStyle = document.getElementById('waveStyle');
+        const language = document.getElementById('language');
+        const scenario = document.getElementById('scenario');
+        const profession = document.getElementById('profession');
+        const noiseCancel = document.getElementById('noiseCancel');
+        const voiceEnhance = document.getElementById('voiceEnhance');
+        const reportModal = document.getElementById('reportModal');
+        const reportContent = document.getElementById('reportContent');
+        const closeModal = document.getElementById('closeModal');
+
+        let audioContext, analyser, dataArray, bufferLength, stream, mediaRecorder, audioChunks = [];
+        let hue = 0, wordCount = 0, fillerCount = 0, startTime, transcriptionText = '', pitchHistory = [];
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        const fillerWords = ['um', 'uh', 'like', 'you know'];
+        let challengeActive = false;
+
+        const historyChart = new Chart(document.getElementById('historyChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'WPM', data: [], borderColor: '#40c4ff' }, { label: 'Confidence', data: [], borderColor: '#ffeb3b' }] },
+            options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { labels: { color: '#ffffff' } } } }
+        });
+
+        startBtn.addEventListener('click', startListening);
+        stopBtn.addEventListener('click', stopListening);
+        recordBtn.addEventListener('click', toggleRecording);
+        exportPdfBtn.addEventListener('click', exportReportPdf);
+        exportViewBtn.addEventListener('click', exportReportView);
+        shareBtn.addEventListener('click', () => alert(`My Speech: ${confidence.textContent} Confidence, ${pace.textContent}`));
+        challengeBtn.addEventListener('click', startChallenge);
+        closeModal.addEventListener('click', () => reportModal.style.display = 'none');
+
+        function startListening() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then((userStream) => {
+                    stream = userStream;
+                    const source = audioContext.createMediaStreamSource(stream);
+                    source.connect(analyser);
+                    startTime = Date.now();
+                    wordCount = 0;
+                    fillerCount = 0;
+                    transcriptionText = '';
+                    recognition.lang = language.value;
+                    recognition.start();
+                    animateWave();
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                    feedback.textContent = "You're live! Speak clearly!";
+                })
+                .catch(err => feedback.textContent = "Mic error: " + err.message);
+        }
+
+        function stopListening() {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            recognition.stop();
+            audioContext && audioContext.close();
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            feedback.textContent = "Well done! Ready for another go?";
+            updateHistory();
+        }
+
+        recognition.onresult = (event) => {
+            let interimText = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const text = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    transcriptionText += text + ' ';
+                    const words = text.split(' ');
+                    wordCount += words.length;
+                    fillerCount += words.filter(w => fillerWords.includes(w.toLowerCase())).length;
+                    translateText(text);
+                } else {
+                    interimText += text;
+                }
+            }
+            transcription.value = transcriptionText + interimText;
+            fillers.textContent = fillerCount;
+        };
+
+        function toggleRecording() {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => new Audio(URL.createObjectURL(new Blob(audioChunks, { type: 'audio/wav' }))).play();
+                mediaRecorder.start();
+                recordBtn.textContent = 'Stop';
+            } else {
+                mediaRecorder.stop();
+                recordBtn.textContent = 'Record';
+            }
+        }
+
+        function generateReport() {
+            return `Speech Report
+Date: ${new Date().toLocaleString()}
+Volume: ${volume.textContent}
+Pace: ${pace.textContent}
+Confidence: ${confidence.textContent}
+Fillers: ${fillers.textContent}
+Pitch: ${pitch.textContent}
+Noise: ${noise.textContent}
+Transcription: ${transcription.value}`;
+        }
+
+        function exportReportPdf() {
+            const doc = new jsPDF();
+            doc.text(generateReport(), 10, 10);
+            doc.save('speech_report.pdf');
+        }
+
+        function exportReportView() {
+            reportContent.textContent = generateReport();
+            reportModal.style.display = 'flex';
+        }
+
+        function translateText(text) {
+            translation.value = `Translated (${language.value}): ${text}`; // Placeholder
+        }
+
+        function calculatePace() {
+            const elapsedMinutes = (Date.now() - startTime) / 60000;
+            return elapsedMinutes > 0 ? (wordCount / elapsedMinutes).toFixed(0) : 0;
+        }
+
+        function calculateConfidence(rms, variance) {
+            return Math.min(100, Math.max(0, (rms * 200) + (variance / 2))).toFixed(0);
+        }
+
+        function detectEmotion(frequency, rms) {
+            return rms > 0.3 && frequency > 150 ? "Happy" : rms < 0.1 ? "Sad" : "Neutral";
+        }
+
+        function animateWave() {
+            if (!analyser) return;
+            requestAnimationFrame(animateWave);
+            analyser.getByteTimeDomainData(dataArray);
+            if (noiseCancel.checked) dataArray.forEach((v, i) => { if (v < 50) dataArray[i] = 128; });
+            if (voiceEnhance.checked) dataArray.forEach((v, i) => dataArray[i] = Math.min(255, v * 1.2));
+
+            waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+            waveCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+            hue = (hue + 1) % 360;
+            waveCtx.strokeStyle = `hsl(${hue}, 70%, 60%)`;
+            waveCtx.lineWidth = 2;
+
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) sum += (dataArray[i] - 128) ** 2;
+            const rms = Math.sqrt(sum / bufferLength) / 128;
+            const db = 20 * Math.log10(rms || 0.0001);
+            analyser.getByteFrequencyData(dataArray);
+            const frequency = (dataArray.indexOf(Math.max(...dataArray)) * audioContext.sampleRate) / analyser.fftSize;
+            pitchHistory.push(frequency);
+            if (pitchHistory.length > 50) pitchHistory.shift();
+            const variance = Math.max(...pitchHistory) - Math.min(...pitchHistory);
+
+            volume.textContent = `${db.toFixed(1)} dB`;
+            pace.textContent = `${calculatePace()} WPM`;
+            confidence.textContent = `${calculateConfidence(rms, variance)}%`;
+            pitch.textContent = `${frequency.toFixed(0)} Hz`;
+            noise.textContent = `${Math.min(100, (rms * 100)).toFixed(0)}%`;
+            progressFill.style.width = `${confidence.textContent}`;
+
+            if (waveStyle.value === 'circular') drawCircularWave(waveCtx, waveCanvas);
+            else if (waveStyle.value === 'line') drawLineWave(waveCtx, waveCanvas);
+            else drawBarWave(waveCtx, waveCanvas);
+            drawPitchGraph();
+
+            const emotion = detectEmotion(frequency, rms);
+            feedback.textContent = scenario.value === 'interview' ? "Stay professional!" : profession.value === 'teacher' ? "Engage your class!" : `${emotion} vibes!`;
+            if (rms < 0.05) feedback.textContent = "Speak louder!";
+            if (challengeActive && (Date.now() - startTime) > 60000) endChallenge();
+        }
+
+        function drawCircularWave(ctx, canvas) {
+            ctx.beginPath();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxRadius = Math.min(canvas.width, canvas.height) / 2.5; // Reduced to fit
+            for (let i = 0; i < bufferLength; i++) {
+                const value = (dataArray[i] - 128) / 128 * 0.8; // Scale down amplitude
+                const angle = (i / bufferLength) * 2 * Math.PI;
+                const r = maxRadius * (0.5 + value * 0.5); // Limit radius
+                const x = centerX + r * Math.cos(angle);
+                const y = centerY + r * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawLineWave(ctx, canvas) {
+            ctx.beginPath();
+            const sliceWidth = canvas.width / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const value = (dataArray[i] - 128) / 128 * 0.8; // Scale down
+                const y = canvas.height / 2 + (value * canvas.height / 2.5); // Fit within bounds
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            ctx.stroke();
+        }
+
+        function drawBarWave(ctx, canvas) {
+            const barWidth = canvas.width / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const value = (dataArray[i] - 128) / 128 * 0.8; // Scale down
+                const height = value * (canvas.height / 2.5); // Fit within bounds
+                ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
+                ctx.fillRect(x, canvas.height / 2 - height, barWidth - 1, height * 2);
+                x += barWidth;
+            }
+        }
+
+        function drawPitchGraph() {
+            pitchCtx.clearRect(0, 0, pitchCanvas.width, pitchCanvas.height);
+            pitchCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            pitchCtx.fillRect(0, 0, pitchCanvas.width, pitchCanvas.height);
+            pitchCtx.strokeStyle = '#40c4ff';
+            pitchCtx.beginPath();
+            pitchHistory.forEach((freq, i) => {
+                const x = (i / 50) * pitchCanvas.width;
+                const y = pitchCanvas.height - (freq / 500) * pitchCanvas.height * 0.8; // Scale to fit
+                if (i === 0) pitchCtx.moveTo(x, y);
+                else pitchCtx.lineTo(x, y);
+            });
+            pitchCtx.stroke();
+        }
+
+        function updateHistory() {
+            historyChart.data.labels.push(new Date().toLocaleTimeString());
+            historyChart.data.datasets[0].data.push(parseFloat(pace.textContent));
+            historyChart.data.datasets[1].data.push(parseFloat(confidence.textContent));
+            historyChart.update();
+        }
+
+        function startChallenge() {
+            challengeActive = true;
+            startTime = Date.now();
+            wordCount = 0;
+            feedback.textContent = "1-minute challenge started!";
+        }
+
+        function endChallenge() {
+            challengeActive = false;
+            feedback.textContent = `Challenge Done! ${pace.textContent}, ${confidence.textContent}`;
+        }
+    </script>
+</body>
+</html>
