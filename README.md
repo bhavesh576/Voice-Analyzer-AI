@@ -1,67 +1,50 @@
-# 🤖 Gesture-Controlled Robotic System
+# 🎙️ Voice Analyzer AI
 
-> Control the future with your hands — no buttons, just gestures.
-
----
-
-## 🧠 Overview
-
-This project uses **MediaPipe** and **JavaScript** to build a futuristic **gesture recognition system** that detects your hand movements in real-time via webcam and maps them to robotic or virtual actions. It’s a stepping stone to natural human-computer interaction — all through motion.
+> Turn your voice into insights — real-time analysis, futuristic UI, and intelligent audio detection.
 
 ---
 
-## 🔥 Key Features
+## 🔍 Overview
 
-- ✋ Real-time **hand gesture recognition**
-- 📷 Webcam-based control system (no extra hardware)
-- ⚙️ Simple, clean UI with futuristic vibes
-- 🧠 Powered by **MediaPipe Hands**
-- 🔗 Easy integration with IoT, Arduino, or robotic simulations
+This project is a real-time **Voice Analyzer** that listens through your microphone, captures your speech, and performs analysis like **pitch, frequency, volume**, and potential classification. It’s a modern, browser-based tool built for fun, learning, and voice-based applications.
+
+Whether you're building **AI voice bots**, testing sound detection, or exploring speech patterns — this tool is your audio companion.
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Features
 
-| Tech        | Role                         |
-|-------------|------------------------------|
-| HTML/CSS    | Frontend structure & styling |
-| JavaScript  | Logic & gesture mapping      |
-| MediaPipe   | Hand detection via webcam    |
-
----
-
-## 🎮 Use Case Ideas
-
-- Controlling **robotic arms**  
-- Navigating **games or UIs** using hand gestures  
-- **Sign language** recognition base model  
-- Contactless **IoT device triggers**  
-- Smart automation systems  
+- 🎧 Real-time **microphone input** and analysis
+- 📊 Detects **volume**, **pitch**, and waveform
+- 🧠 Optionally expandable with **AI/NLP models**
+- 💡 Visual feedback with futuristic UI
+- ⚙️ 100% browser-based — no install needed
 
 ---
 
-## ⚡ How It Works
+## 🛠 Tech Stack
 
-1. ✅ Open the app in your browser
-2. 📷 Allow access to your webcam
-3. 🖐️ Move your hand in front of the camera
-4. 🔍 System detects keypoints and classifies gestures
-5. 🤖 Mapped actions are triggered instantly
-
----
-
-## 🖼️ Preview
-
-![Gesture Control](https://media.giphy.com/media/Sr8xDpMwVKOHUWDVRD/giphy.gif)
-
-> *Add your own demo GIF or video here when available*
+| Tech         | Role                                  |
+|--------------|----------------------------------------|
+| JavaScript   | Core voice detection and logic         |
+| Web Audio API| Real-time microphone analysis          |
+| HTML/CSS     | Frontend UI and animation              |
 
 ---
 
-## 📦 Installation & Usage
+## 🎥 Demo Preview
+
+> Add your GIF or screen recording here (optional)
+
+![Voice Analyzer Preview](https://media.giphy.com/media/3o7TKtnuHOHHUjR38Y/giphy.gif)
+
+---
+
+## 📦 How to Use
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/gesture-control-robot.git
+git clone https://github.com/your-username/voice-analyzer.git
 
 # Open index.html in your browser
+
